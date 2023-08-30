@@ -1,35 +1,30 @@
-def checksum_crosscheck(check_string, verbose=False):
-    if check_string[0] != "$":
-        return None
-    else:
-        string_to_check = []
-        check_str_end = check_string.find("*")
-        checksum_input = hex(int('0x' + check_string[check_str_end + 1 :], 16))
-        calc_checksum = 0
+def validator(nmea_sentence: str | None = None):
+    if nmea_sentence is not None:
+        # Split the sentence and provided checksum value
+        chk_str, chk_hex = nmea_sentence.split("*")
 
-        for charecter in check_string[1:]:
-            if charecter == "*":
-                break
-            else:
-                string_to_check.append(charecter)
+        # Convert the provided checksum into hex class
+        chk_hex = hex(int('0x' + chk_hex, 16))
 
-    string_to_check[:] = (x for x in string_to_check if x != ',')
+        # Remove the '$' at the beginning of each sentence
+        chk_str = ''.join(chk_str[1:])
 
+        # Initialize a variable for byte-wise XOR of sentence characters
+        chk_str_hex = 0
+        for char in chk_str:
+            chk_str_hex ^= ord(char)
+        chk_str_hex = hex(chk_str_hex)
 
-    for each in string_to_check:
-        calc_checksum ^= ord(each)
-    
-    calc_checksum = hex(calc_checksum)
-    if verbose:
-        print(f'Input checksum = {checksum_input}, Calculated checksum = {calc_checksum}')
+        # print(f'{chk_str = } {chk_str_hex = } {chk_hex = }')
 
-    if checksum_input == calc_checksum:
-        return True
-    else:
-        return False
+        if chk_str_hex == chk_hex:
+            return True
+
+    return False
 
 
 if __name__ == '__main__':
-    
+
     check_str = "$GPGGA,121315.00,0128.96496,F,02330.13368,L,1,08,0.94,31.7,M,-94.3,M,,*49"
-    print(checksum_crosscheck(check_str, verbose=True))
+
+    print(f'{validator(check_str) = }')
